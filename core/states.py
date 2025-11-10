@@ -35,7 +35,7 @@ class GameState:
     def is_goal_fun(self):
         player_x, player_y = self.player_pos
         goal_x, goal_y = self.goal_pos
-         # print(self.bunus_count_player)
+          # print(self.bunus_count_player)
         if self.map_data[player_x][player_y] == SYMBOLS["FIRE"]:
             self.is_goal = False
             self.game_over = True
@@ -54,6 +54,7 @@ class GameState:
         self.rows = len(new_map)
         self.cols = len(new_map[0]) if self.rows > 0 else 0
         self.is_goal_fun()
+        # self.print_map()
 
     def print_map(self):
         for row in self.map_data:

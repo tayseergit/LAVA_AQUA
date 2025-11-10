@@ -4,6 +4,7 @@
 SYMBOLS = {
     "WALL": "#",
     "PLAYER": "●",
+    "WATER_PLAYER": "⋆",
     "FIRE": "▲",
     "GOAL": "■",
     "EMPTY": "-",
@@ -21,6 +22,7 @@ SYMBOLS = {
 COLORS = {
     SYMBOLS["WALL"]: (54, 219, 40),        # Wall
     SYMBOLS["PLAYER"]: (255, 165, 0),     # Player
+    SYMBOLS["WATER_PLAYER"]: (255, 165, 0),     # Player
     SYMBOLS["FIRE"]: (255, 0, 0),         # Fire
     SYMBOLS["GOAL"]: (128, 0, 128),       # Goal
     SYMBOLS["EMPTY"]: (200, 200, 200),    # Free cell
@@ -40,4 +42,4 @@ DIRECTION = {
     "RIGHT": (0, 1)
 }
 FIRE_SYMBOLS = {SYMBOLS["FIRE"], SYMBOLS["SIMI_WALL_FIRE"]}
-WATER_SYMBOLS = {SYMBOLS["WATER"], SYMBOLS["SIMI_WALL_WATER"]}
+WATER_SYMBOLS = {SYMBOLS["WATER"], SYMBOLS["SIMI_WALL_WATER"],   SYMBOLS["WATER_PLAYER"]}

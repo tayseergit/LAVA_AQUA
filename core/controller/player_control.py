@@ -1,5 +1,6 @@
 import pygame
 from core.component.symbols import DIRECTION, SYMBOLS
+import time
 
 class HumanPlayer:
     def __init__(self, state, actions, result, display, symbol=SYMBOLS["PLAYER"]):
@@ -35,5 +36,4 @@ class HumanPlayer:
 
             self.handle_events()       # move player based on key press
             self.display.update_display()  
- 
-        pygame.quit()
+        # time.sleep(1)  # wait for 5 seconds

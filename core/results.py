@@ -5,6 +5,8 @@ class Result:
     def __init__(self, state):
         self.state = state
         self.symbol = SYMBOLS["PLAYER"]
+        self.water_symbol = SYMBOLS["WATER_PLAYER"]
+
         self.game_map = self.state.map_data
         self.y_player, self.x_player = state.player_pos
 
@@ -53,18 +55,26 @@ class Result:
    
     def _move_player_to(self, new_y, new_x):
         # Restore previous cell (goal or empty)
-        
+        target_cell = self.game_map[new_y][new_x]
+        if target_cell == SYMBOLS["FIRE"]:
+            print("🔥 Player stepped on fire! Game Over.")
+            self.state.game_over =True
+            self.state.is_goal = False
+            # self.state.update_state(self.game_map)
+
+            return  # stop moving
         
         if (self.y_player, self.x_player) == self.state.goal_pos:
             self.game_map[self.y_player][self.x_player] = SYMBOLS["GOAL"]
         
         else:
             self.game_map[self.y_player][self.x_player] = SYMBOLS["EMPTY"]
-        target_cell = self.game_map[new_y][new_x]
         if target_cell in SYMBOLS["BUNUS"]:
             self.state.bunus_count_player += 1
             # Remove bonus from map
             self.game_map[new_y][new_x] = SYMBOLS["EMPTY"]
+        if target_cell == SYMBOLS["WATER"]:
+            self.symbol = self.water_symbol
     
         # Update player coordinates
         self.y_player, self.x_player = new_y, new_x
@@ -117,30 +127,34 @@ class Result:
                                 SYMBOLS["WATER"],
                                 SYMBOLS["SINGLE_WALL"],
                                 SYMBOLS["GOAL"],
-                                SYMBOLS["FIRE"],
+                                
                                 SYMBOLS["SIMI_WALL_WATER"],
 
                             ) and not target.isdigit():
                                 
                                 new_map[new_y][new_x] = SYMBOLS["WATER"]
-                             
+                            if target == SYMBOLS["FIRE"] :
+                                new_map[new_y][new_x] = SYMBOLS["WALL"]
+
                             
                 # === ⏳ NUMBER WALL countdown ===
                 elif cell.isdigit():
                     new_value = int(cell) - 1
                     new_map[y][x] = SYMBOLS["EMPTY"] if new_value <= 0 else str(new_value)
-        py, px = self.y_player, self.x_player
-        new_map[py][px] = SYMBOLS["PLAYER"]
+        # py, px = self.y_player, self.x_player
+        # new_map[py][px] = SYMBOLS["PLAYER"]
         self.game_map = new_map
 
     def update_environment_and_player(self, direction):
         if not isinstance(direction, tuple) or len(direction) != 2:
             raise ValueError("Direction must be a tuple like (-1, 0)")
 
-        dy, dx = direction
-        self.move(dy, dx)
-        self.update_environment()
-        # self._move_player_to(*self.state.player_pos)
+        if self.state.game_over:
+            return   
 
-        self.state.update_state(self.game_map)
-        # self.state.print_map()
+        dy, dx = direction
+        self.update_environment()
+        self.move(dy, dx)
+
+        if not self.state.game_over:
+            self.state.update_state(self.game_map)
