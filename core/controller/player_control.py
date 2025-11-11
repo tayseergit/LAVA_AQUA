@@ -33,7 +33,7 @@ class HumanPlayer:
                     running = False
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     running = False
-
+            self.display.handle_top_buttons(event)
             self.handle_events()       # move player based on key press
             self.display.update_display()  
-        # time.sleep(1)  # wait for 5 seconds
+        time.sleep(1)  # wait for 5 seconds

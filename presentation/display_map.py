@@ -84,6 +84,29 @@ class GameDisplay:
             pygame.draw.circle(self.screen, player_color, rect.center, self.cell_size // 2 - 5)
     # ==================== END SCREEN ====================
 
+    def draw_top_buttons(self):
+        """Draw Undo and Restart buttons at top-left."""
+        font = pygame.font.SysFont("arial", 20, bold=True)
+
+        # Buttons setup
+        button_size = (100, 40)
+        margin = 10
+
+        self.undo_button_rect = pygame.Rect(margin, margin, *button_size)
+        self.restart_button_rect = pygame.Rect(margin + button_size[0] + 10, margin, *button_size)
+
+        # Draw Undo
+        pygame.draw.rect(self.screen, (80, 80, 200), self.undo_button_rect, border_radius=8)
+        undo_text = font.render("⏪ Undo", True, (255, 255, 255))
+        self.screen.blit(undo_text, undo_text.get_rect(center=self.undo_button_rect.center))
+
+        # Draw Restart
+        pygame.draw.rect(self.screen, (200, 80, 80), self.restart_button_rect, border_radius=8)
+        restart_text = font.render("🔁 Restart", True, (255, 255, 255))
+        self.screen.blit(restart_text, restart_text.get_rect(center=self.restart_button_rect.center))
+
+
+
     def draw_end_screen(self):
         """Display win/lose message and OK button."""
         overlay = pygame.Surface((self.window_width, self.window_height))
@@ -127,6 +150,7 @@ class GameDisplay:
         """Redraw the map once."""
         self.screen.fill((0, 0, 0))
         self.draw_map()
+        self.draw_top_buttons()  # 👈 Add here
 
         if self.state.game_over:
             self.draw_end_screen()
@@ -135,11 +159,11 @@ class GameDisplay:
         self.clock.tick(12)
 
     # ==================== OK BUTTON HANDLER ====================
+    def handle_top_buttons(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.undo_button_rect.collidepoint(event.pos):
+                self.state.undo()
+            elif self.restart_button_rect.collidepoint(event.pos):
+                self.state.restart()
 
-    def handle_ok_click(self, event):
-        """Close the program when OK button is clicked."""
-        if self.ok_button_rect and event.type == pygame.MOUSEBUTTONDOWN:
-            if self.ok_button_rect.collidepoint(event.pos):
-                print("👋 Game closed by user.")
-                pygame.quit()
-                exit()
+   
