@@ -64,7 +64,10 @@ class Result:
 
             return  # stop moving
         
-        if (self.y_player, self.x_player) == self.state.goal_pos:
+        if self.game_map[self.y_player][self.x_player] in (SYMBOLS["WATER"]):
+            self.game_map[self.y_player][self.x_player] = SYMBOLS["WATER"]
+        
+        elif (self.y_player, self.x_player) == self.state.goal_pos:
             self.game_map[self.y_player][self.x_player] = SYMBOLS["GOAL"]
         
         else:
@@ -73,8 +76,8 @@ class Result:
             self.state.bunus_count_player += 1
             # Remove bonus from map
             self.game_map[new_y][new_x] = SYMBOLS["EMPTY"]
-        if target_cell == SYMBOLS["WATER"]:
-            self.symbol = self.water_symbol
+        # if target_cell == SYMBOLS["WATER"]:
+        #     self.symbol = self.water_symbol
     
         # Update player coordinates
         self.y_player, self.x_player = new_y, new_x
@@ -82,16 +85,25 @@ class Result:
         self.state.player_pos = (new_y, new_x)
         self.state.update_state(self.game_map)
 
+
     def update_environment(self):
+        """Main function to update all environment types."""
         old_map = deepcopy(self.game_map)
+
+        new_map = self.fire_spread(deepcopy(old_map))
+        new_map = self.water_spread(new_map)
+        new_map = self.digit_decrease(new_map)
+
+        self.game_map = new_map
+        self.state.update_state(self.game_map)
+
+    def fire_spread(self, old_map):
         new_map = deepcopy(old_map)
         directions = list(DIRECTION.values())
 
         for y in range(len(old_map)):
             for x in range(len(old_map[y])):
                 cell = old_map[y][x]
-
-                # === 🔥 FIRE spread ===
                 if cell in FIRE_SYMBOLS:
                     for dy, dx in directions:
                         new_y, new_x = y + dy, x + dx
@@ -99,7 +111,6 @@ class Result:
                             target = old_map[new_y][new_x]
 
                             if target == SYMBOLS["SIMI_WALL"]:
-                                # Fire affects the SIMI_WALL but doesn't replace it
                                 new_map[new_y][new_x] = SYMBOLS["SIMI_WALL_FIRE"]
                             elif target not in (
                                 SYMBOLS["WALL"],
@@ -108,53 +119,59 @@ class Result:
                                 SYMBOLS["GOAL"],
                                 SYMBOLS["WATER"],
                                 SYMBOLS["SIMI_WALL_FIRE"],
-
                             ) and not target.isdigit():
                                 new_map[new_y][new_x] = SYMBOLS["FIRE"]
+        return new_map
 
-                # === 💧 WATER spread ===
-                elif cell in WATER_SYMBOLS:
+    # === 💧 WATER spread ===
+    def water_spread(self, old_map):
+        new_map = deepcopy(old_map)
+        directions = list(DIRECTION.values())
+
+        for y in range(len(old_map)):
+            for x in range(len(old_map[y])):
+                cell = old_map[y][x]
+                if cell in WATER_SYMBOLS:
                     for dy, dx in directions:
                         new_y, new_x = y + dy, x + dx
                         if 0 <= new_y < len(old_map) and 0 <= new_x < len(old_map[new_y]):
                             target = old_map[new_y][new_x]
 
-                            if target == SYMBOLS["SIMI_WALL"]:
-                                # Water affects the SIMI_WALL but doesn't replace it
+                            if target  in FIRE_SYMBOLS:
+                                new_map[new_y][new_x] = SYMBOLS["WALL"]
+                        
+                            elif target == SYMBOLS["SIMI_WALL"]:
                                 new_map[new_y][new_x] = SYMBOLS["SIMI_WALL_WATER"]
                             elif target not in (
                                 SYMBOLS["WALL"],
                                 SYMBOLS["WATER"],
                                 SYMBOLS["SINGLE_WALL"],
                                 SYMBOLS["GOAL"],
-                                
+                                # SYMBOLS["FIRE"],
                                 SYMBOLS["SIMI_WALL_WATER"],
-
                             ) and not target.isdigit():
-                                
                                 new_map[new_y][new_x] = SYMBOLS["WATER"]
-                            if target == SYMBOLS["FIRE"] :
-                                new_map[new_y][new_x] = SYMBOLS["WALL"]
+        return new_map
 
-                            
-                # === ⏳ NUMBER WALL countdown ===
-                elif cell.isdigit():
+    # === ⏳ NUMBER WALL countdown ===
+    def digit_decrease(self, old_map):
+        new_map = deepcopy(old_map)
+        for y in range(len(old_map)):
+            for x in range(len(old_map[y])):
+                cell = old_map[y][x]
+                if cell.isdigit():
                     new_value = int(cell) - 1
                     new_map[y][x] = SYMBOLS["EMPTY"] if new_value <= 0 else str(new_value)
-        # py, px = self.y_player, self.x_player
-        # new_map[py][px] = SYMBOLS["PLAYER"]
-        self.game_map = new_map
+        return new_map
 
     def update_environment_and_player(self, direction):
-        if not isinstance(direction, tuple) or len(direction) != 2:
-            raise ValueError("Direction must be a tuple like (-1, 0)")
-
+ 
         if self.state.game_over:
             return   
 
         dy, dx = direction
-        self.update_environment()
         self.move(dy, dx)
+        self.update_environment()
+        # self.update_environment()
 
-        if not self.state.game_over:
-            self.state.update_state(self.game_map)
+        # if not self.state.game_over:

@@ -11,12 +11,12 @@ class Actions:
          
         for y, row in enumerate(self.state.map_data):
             for x, tile in enumerate(row):
-                if tile == SYMBOLS["PLAYER"]:
+                if tile == SYMBOLS["PLAYER"] :
                     return y, x
         return None
 
     def available_actions(self):
-        pos = self.get_player_position()
+        pos = self.state.player_pos
         if not pos:
             return []
         y, x = pos

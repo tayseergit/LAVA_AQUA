@@ -54,7 +54,7 @@ class GameState:
         self.rows = len(new_map)
         self.cols = len(new_map[0]) if self.rows > 0 else 0
         self.is_goal_fun()
-        # self.print_map()
+        self.print_map()
 
     def print_map(self):
         for row in self.map_data:

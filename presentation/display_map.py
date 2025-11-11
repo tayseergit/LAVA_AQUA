@@ -38,8 +38,8 @@ class GameDisplay:
                     pygame.draw.circle(self.screen, color, rect.center, self.cell_size // 3 - 5)
 
                 elif tile.isdigit():
-                    pygame.draw.rect(self.screen, (30, 30, 30), rect)
-                    text_surface = font.render(tile, True, (255, 255, 255))
+                    pygame.draw.rect(self.screen, (0, 200, 0), rect)
+                    text_surface = font.render(tile, True, (0, 0, 0))
                     text_rect = text_surface.get_rect(center=rect.center)
                     self.screen.blit(text_surface, text_rect)
 
@@ -73,7 +73,15 @@ class GameDisplay:
 
                 # Grid lines
                 pygame.draw.rect(self.screen, self.line_color, rect, 1)
-
+        if hasattr(self.state, "player_pos") and self.state.player_pos:
+            py, px = self.state.player_pos
+            player_color = COLORS.get(SYMBOLS["PLAYER"], (255, 255, 255))
+            rect = pygame.Rect(px * self.cell_size, py * self.cell_size,
+                               self.cell_size, self.cell_size)
+            transparent_rect = pygame.Surface((self.cell_size, self.cell_size), pygame.SRCALPHA)
+            transparent_rect.fill((220, 220, 220, 0))  # Last value = alpha (0 = fully transparent)
+            self.screen.blit(transparent_rect, rect.topleft)
+            pygame.draw.circle(self.screen, player_color, rect.center, self.cell_size // 2 - 5)
     # ==================== END SCREEN ====================
 
     def draw_end_screen(self):
