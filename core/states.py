@@ -78,11 +78,15 @@ class GameState:
         self.player_pos = deepcopy(self.initial_player_pos)
 
         self.history.clear()
-        self.player_pos = self.find_symbol(SYMBOLS["PLAYER"])
+        self.player_pos = self.initial_player_pos
         self.is_goal = False
         self.game_over = False
         self.bunus_count_player = 0
+        self.bunus_count = self.count_bonuses()
+
         print("🔁 Game restarted.")
+        self.print_map()
+
 
     # === Print ===
     def print_map(self):
