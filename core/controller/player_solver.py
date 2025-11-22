@@ -1,11 +1,10 @@
 import pygame
-from core.component.symbols import DIRECTION, SYMBOLS
+from core.component.symbols import DIRECTION
 import time
 
 class HumanPlayer:
-    def __init__(self, state, actions, result, display, symbol=SYMBOLS["PLAYER"]):
+    def __init__(self, state, actions, result, display ):
         self.display = display
-        self.symbol = symbol
         self.state = state
         self.actions = actions
         self.result = result
@@ -13,16 +12,16 @@ class HumanPlayer:
     def handle_events(self):
         """Process keyboard events to move player."""
         keys = pygame.key.get_pressed()
-        available = self.actions.available_actions()
+        available = self.actions.available_actions(self.state)
 
         if keys[pygame.K_UP] and "UP" in available:
-            self.result.update_environment_and_player(DIRECTION["UP"])
+            self.result.update_environment_and_player(self.state,DIRECTION["UP"])
         elif keys[pygame.K_DOWN] and "DOWN" in available:
-            self.result.update_environment_and_player(DIRECTION["DOWN"])
+            self.result.update_environment_and_player(self.state,DIRECTION["DOWN"])
         elif keys[pygame.K_LEFT] and "LEFT" in available:
-            self.result.update_environment_and_player(DIRECTION["LEFT"])
+            self.result.update_environment_and_player(self.state,DIRECTION["LEFT"])
         elif keys[pygame.K_RIGHT] and "RIGHT" in available:
-            self.result.update_environment_and_player(DIRECTION["RIGHT"])
+            self.result.update_environment_and_player(self.state,DIRECTION["RIGHT"])
 
     def run(self):
         """Main loop using Pygame to move player and render GUI."""
@@ -36,4 +35,4 @@ class HumanPlayer:
             self.display.handle_top_buttons(event)
             self.handle_events()       # move player based on key press
             self.display.update_display()  
-        time.sleep(1)  # wait for 5 seconds
+ 

@@ -1,11 +1,10 @@
-from collections import deque
 from copy import deepcopy
 import pygame
 import time
 from core.component.symbols import *
 from core.states import *
 
-class BFSSolver:
+class DFSSolver:
     def __init__(self, state, actions, result_class, display):
         self.initial_state = state
         self.actions = actions
@@ -24,22 +23,22 @@ class BFSSolver:
         return (map_key, state.player_pos, state.bunus_count_player)
 
     # =====================================================
-    # BFS
+    # DFS
     # =====================================================
-    def bfs(self):
+    def dfs(self):
         start_time = time.time()
 
         start_state = deepcopy(self.initial_state)
         start_key = self.make_key(start_state)
 
-        queue = deque([(start_state, [])])     # FIFO queue for BFS
+        stack = [(start_state, [])]  # Use stack for DFS
         visited = {start_key}
 
         self.visited_states = 0
         self.generated_states = 1
 
-        while queue:
-            current_state, path = queue.popleft()   # FIFO dequeue
+        while stack:
+            current_state, path = stack.pop()  # LIFO
             self.visited_states += 1
 
             if current_state.is_goal:
@@ -53,27 +52,33 @@ class BFSSolver:
 
             for action in available_actions:
                 dy, dx = DIRECTION[action]
+                cy, cx = current_state.player_pos
+                ny, nx = cy + dy, cx + dx
+
+                if not (0 <= ny < current_state.rows and 0 <= nx < current_state.cols):
+                    continue
 
                 new_state = deepcopy(current_state)
                 result_handler = self.result_class()
                 new_state= result_handler.update_environment_and_player(new_state, (dy, dx))
+ 
+                # Pygame live update
                 # self.display.update_display()
-
-               
-
+                
+                if GameState.is_dead_state(new_state):
+                    continue
                 status = GameState.is_goal_status(new_state)
-
-                if status:
+                if status  is True:
                     self.execution_time = time.time() - start_time
                     return path + [action]
 
-                if  status is False :
+                if status is False:
                     continue
 
                 key = self.make_key(new_state)
                 if key not in visited:
                     visited.add(key)
-                    queue.append((new_state, path + [action]))
+                    stack.append((new_state, path + [action]))
                     self.generated_states += 1
 
         # No solution
@@ -81,12 +86,12 @@ class BFSSolver:
         return []
 
     # =====================================================
-    # Run BFS and display solution
+    # Run DFS and display solution
     # =====================================================
     def run(self):
-        path = self.bfs()
+        path = self.dfs()
 
-        print("\n===== BFS STATS =====")
+        print("\n===== DFS STATS =====")
         print("Visited:", self.visited_states)
         print("Generated:", self.generated_states)
         print("Length:", len(path))

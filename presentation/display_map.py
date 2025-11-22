@@ -30,11 +30,10 @@ class GameDisplay:
                                    self.cell_size, self.cell_size)
 
                 if tile == SYMBOLS["PLAYER"]:
-                    pygame.draw.rect(self.screen, (220, 220, 220), rect)
-                    pygame.draw.circle(self.screen, color, rect.center, self.cell_size // 2 - 5)
+                   pygame.draw.rect(self.screen, COLORS[SYMBOLS["EMPTY"]], rect)
 
                 elif tile == SYMBOLS["BUNUS"]:
-                    pygame.draw.rect(self.screen, (220, 220, 220), rect)
+                    pygame.draw.rect(self.screen, (220, 220, 220,0), rect)
                     pygame.draw.circle(self.screen, color, rect.center, self.cell_size // 3 - 5)
 
                 elif tile.isdigit():
@@ -156,7 +155,7 @@ class GameDisplay:
             self.draw_end_screen()
 
         pygame.display.flip()
-        self.clock.tick(12)
+        self.clock.tick(10)
 
     # ==================== OK BUTTON HANDLER ====================
     def handle_top_buttons(self, event):
@@ -165,5 +164,9 @@ class GameDisplay:
                 self.state.undo()
             elif self.restart_button_rect.collidepoint(event.pos):
                 self.state.restart()
+
+    def force_refresh(self):
+        pygame.display.flip()
+        pygame.event.pump()
 
    

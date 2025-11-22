@@ -2,97 +2,94 @@ from copy import deepcopy
 from core.component.symbols import *
 
 class Result:
-    def __init__(self, state):
-        self.state = state
-        self.water_symbol = SYMBOLS["WATER_PLAYER"]
-
+    def __init__(self):
+        ...
     # ======================================================
     # PUSH WALL LOGIC
     # ======================================================
-    def push_wall(self, wall_y, wall_x, dy, dx):
+    def push_wall(self, state, wall_y, wall_x, dy, dx):
         new_wall_y = wall_y + dy
         new_wall_x = wall_x + dx
 
-        if not (0 <= new_wall_y < len(self.state.map_data) and 
-                0 <= new_wall_x < len(self.state.map_data[0])):
+        if not (0 <= new_wall_y < state.rows and 0 <= new_wall_x < state.cols):
             return False
 
-        target = self.state.map_data[new_wall_y][new_wall_x]
+        target = state.map_data[new_wall_y][new_wall_x]
 
         # Wall can be pushed into EMPTY, FIRE, WATER
-        if target not in (SYMBOLS["EMPTY"], SYMBOLS["FIRE"], SYMBOLS["WATER"]):
+        if target not in (SYMBOLS["EMPTY"], SYMBOLS["FIRE"], SYMBOLS["WATER"],SYMBOLS["BUNUS"]):
             return False
 
         # Move the wall
-        self.state.map_data[new_wall_y][new_wall_x] = SYMBOLS["SINGLE_WALL"]
-        self.state.map_data[wall_y][wall_x] = SYMBOLS["EMPTY"]
+        state.map_data[new_wall_y][new_wall_x] = SYMBOLS["SINGLE_WALL"]
+        state.map_data[wall_y][wall_x] = SYMBOLS["EMPTY"]
         return True
 
     # ======================================================
     # PLAYER MOVE
     # ======================================================
-    def move(self, dy, dx):
-        y, x = self.state.player_pos
+    def move(self, state, dy, dx):
+        y, x = state.player_pos
         new_y, new_x = y + dy, x + dx
 
-        target = self.state.map_data[new_y][new_x]
+        target = state.map_data[new_y][new_x]
 
         # Case 1 — movable wall
         if target == SYMBOLS["SINGLE_WALL"]:
-            if not self.push_wall(new_y, new_x, dy, dx):
+            if not self.push_wall(state, new_y, new_x, dy, dx):
                 return  # cannot push
-            self._move_player_to(new_y, new_x)
+            self._move_player_to(state, new_y, new_x)
             return
 
         # Case 2 — normal cell
-        self._move_player_to(new_y, new_x)
+        self._move_player_to(state, new_y, new_x)
 
     # ======================================================
     # CORE PLAYER MOVE LOGIC
     # ======================================================
-    def _move_player_to(self, new_y, new_x):
-        y, x = self.state.player_pos
-        target = self.state.map_data[new_y][new_x]
+    def _move_player_to(self, state, new_y, new_x):
+        y, x = state.player_pos
+        target = state.map_data[new_y][new_x]
 
         # Fire → game over
         if target == SYMBOLS["FIRE"]:
-            print("🔥 Player stepped on fire! Game Over.")
-            self.state.game_over = True
-            self.state.is_goal = False
+            state.game_over = True
+            state.is_goal = False
             return
 
         # Restore previous player tile
-        if self.state.map_data[y][x] == SYMBOLS["WATER_PLAYER"]:
-            self.state.map_data[y][x] = SYMBOLS["WATER"]
-        elif (y, x) == self.state.goal_pos:
-            self.state.map_data[y][x] = SYMBOLS["GOAL"]
+        if state.map_data[y][x] == SYMBOLS["WATER_PLAYER"]:
+            state.map_data[y][x] = SYMBOLS["WATER"]
+        elif state.map_data[y][x] == SYMBOLS["WATER"]:
+            state.map_data[y][x] = SYMBOLS["WATER"]
+        elif (y, x) == state.goal_pos:
+            state.map_data[y][x] = SYMBOLS["GOAL"]
         else:
-            self.state.map_data[y][x] = SYMBOLS["EMPTY"]
+            state.map_data[y][x] = SYMBOLS["EMPTY"]
 
         # Bonus pickup
         if target in SYMBOLS["BUNUS"]:
-            self.state.bunus_count_player += 1
+            state.bunus_count_player += 1
             target = SYMBOLS["EMPTY"]
 
         # Update new position
-        self.state.map_data[new_y][new_x] = SYMBOLS["PLAYER"]
-        self.state.player_pos = (new_y, new_x)
-
-        self.state.update_state(self.state.map_data)
+        state.map_data[new_y][new_x] = SYMBOLS["PLAYER"]
+        state.player_pos = (new_y, new_x)
+        # state.update_state(state.map_data)
 
     # ======================================================
     # ENVIRONMENT UPDATE
     # ======================================================
-    def update_environment(self):
-        old_map = deepcopy(self.state.map_data)
+    def update_environment(self, state):
+        old_map = deepcopy(state.map_data)
 
-        new_map = self.fire_spread(deepcopy(old_map))
+        new_map = self.fire_spread(old_map)
         new_map = self.water_spread(new_map)
         new_map = self.digit_decrease(new_map)
 
-        self.state.map_data = new_map
-        self.state.update_state(self.state.map_data)
-
+        state.map_data = new_map
+        state.update_state(state.map_data)
+        return state
     # ======================================================
     # FIRE
     # ======================================================
@@ -105,18 +102,12 @@ class Result:
                         ny, nx = y + dy, x + dx
                         if 0 <= ny < len(old_map) and 0 <= nx < len(old_map[0]):
                             target = old_map[ny][nx]
-
                             if target == SYMBOLS["SIMI_WALL"]:
                                 new_map[ny][nx] = SYMBOLS["SIMI_WALL_FIRE"]
-
-                            elif (target not in (
-                                    SYMBOLS["WALL"],
-                                    SYMBOLS["FIRE"],
-                                    SYMBOLS["SINGLE_WALL"],
-                                    SYMBOLS["GOAL"],
-                                    SYMBOLS["WATER"],
-                                    SYMBOLS["SIMI_WALL_FIRE"]
-                                ) and not target.isdigit()):
+                            elif target not in (
+                                SYMBOLS["WALL"], SYMBOLS["FIRE"], SYMBOLS["SINGLE_WALL"],
+                                SYMBOLS["GOAL"], SYMBOLS["WATER"], SYMBOLS["SIMI_WALL_FIRE"],SYMBOLS["BUNUS"]
+                            ) and not target.isdigit():
                                 new_map[ny][nx] = SYMBOLS["FIRE"]
         return new_map
 
@@ -132,20 +123,14 @@ class Result:
                         ny, nx = y + dy, x + dx
                         if 0 <= ny < len(old_map) and 0 <= nx < len(old_map[0]):
                             target = old_map[ny][nx]
-
                             if target in FIRE_SYMBOLS:
                                 new_map[ny][nx] = SYMBOLS["WALL"]
-
                             elif target == SYMBOLS["SIMI_WALL"]:
                                 new_map[ny][nx] = SYMBOLS["SIMI_WALL_WATER"]
-
-                            elif (target not in (
-                                    SYMBOLS["WALL"],
-                                    SYMBOLS["WATER"],
-                                    SYMBOLS["SINGLE_WALL"],
-                                    SYMBOLS["GOAL"],
-                                    SYMBOLS["SIMI_WALL_WATER"]
-                                ) and not target.isdigit()):
+                            elif target not in (
+                                SYMBOLS["WALL"], SYMBOLS["WATER"], SYMBOLS["SINGLE_WALL"],
+                                SYMBOLS["GOAL"], SYMBOLS["SIMI_WALL_WATER"],SYMBOLS["BUNUS"]
+                            ) and not target.isdigit():
                                 new_map[ny][nx] = SYMBOLS["WATER"]
         return new_map
 
@@ -164,10 +149,10 @@ class Result:
     # ======================================================
     # MOVE + ENVIRONMENT UPDATE
     # ======================================================
-    def update_environment_and_player(self, direction):
-        if self.state.game_over:
+    def update_environment_and_player(self, state, direction):
+        if state.game_over:
             return
-        
         dy, dx = direction
-        self.move(dy, dx)
-        self.update_environment()
+        self.move(state, dy, dx)
+        return self.update_environment(state)
+        
