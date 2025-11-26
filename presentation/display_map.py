@@ -81,6 +81,15 @@ class GameDisplay:
             transparent_rect.fill((220, 220, 220, 0))  # Last value = alpha (0 = fully transparent)
             self.screen.blit(transparent_rect, rect.topleft)
             pygame.draw.circle(self.screen, player_color, rect.center, self.cell_size // 2 - 5)
+        for bunus in self.state.bonus_positions:
+            by, bx = bunus
+            bunus_color = COLORS.get(SYMBOLS["BUNUS"], (255, 255, 255))
+            rect = pygame.Rect(bx * self.cell_size, by * self.cell_size,
+                               self.cell_size, self.cell_size)
+            transparent_rect = pygame.Surface((self.cell_size, self.cell_size), pygame.SRCALPHA)
+            transparent_rect.fill((220, 220, 220, 0))  # Last value = alpha (0 = fully transparent)
+            # self.screen.blit(transparent_rect, rect.topleft)
+            pygame.draw.circle(self.screen, bunus_color, rect.center, self.cell_size // 2 - 5)
     # ==================== END SCREEN ====================
 
     def draw_top_buttons(self):

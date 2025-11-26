@@ -7,6 +7,7 @@ class GameState:
         self.map_data = deepcopy(map_data)
         self.initial_map = deepcopy(map_data)
         self.history = []
+        self.bonus_positions = []
 
         # Dimensions
         self.rows = len(self.map_data)
@@ -40,30 +41,40 @@ class GameState:
     # COUNT BONUSES
     # ======================================================
     def count_bonuses(self):
-        return sum(
-            1
-            for row in self.map_data
-            for cell in row
-            if cell in SYMBOLS["BUNUS"]
-        )
+        self.bonus_positions = []  # <-- store bonus coordinates
 
+        count = 0
+        for y, row in enumerate(self.map_data):
+            for x, cell in enumerate(row):
+                if cell in SYMBOLS["BUNUS"]:
+                    count += 1
+                    self.bonus_positions.append((y, x))
+
+        return count
     # ======================================================
     # PURE GOAL CHECK — BFS USES THIS
     # ======================================================
     @staticmethod
     def is_goal_status(state):
+        # print(state.bunus_count_player)
+        # print(state.bunus_count)
         py, px = state.player_pos
         gy, gx = state.goal_pos
         tile = state.map_data[py][px]
+ 
 
         # print(state.bunus_count_player , state.bunus_count)
         # Lose if step on fire
-        if tile == SYMBOLS["FIRE"]:
+        if (py, px) == (gy, gx) and state.bunus_count_player == state.bunus_count:
+            state.is_goal = True
+            state.game_over = False
+            return True
+        elif tile in (SYMBOLS["FIRE"],SYMBOLS["WALL"]):
+            state.is_goal = False
+            state.game_over = True
             return False
 
         # Goal if reach goal & have all bonuses
-        if (py, px) == (gy, gx) and state.bunus_count_player == state.bunus_count:
-            return True
 
         # Normal
         return None
@@ -78,7 +89,15 @@ class GameState:
         self.map_data = deepcopy(new_map)
         self.rows = len(self.map_data)
         self.cols = len(self.map_data[0])
+         # write state on file
+        # with open(
+        #      "D:\مشاريع\LAVA_AQUA\data\states_log.txt" , "a", encoding="utf-8") as f:
+        #     for row in self.map_data:
+        #         f.write(str(row) + "\n")
+        #     f.write("\n\n\n")
 
+
+            
         # Evaluate goal / lose states
         goal_status = GameState.is_goal_status(self)
         # print(goal_status)
@@ -139,10 +158,10 @@ class GameState:
 
 
     def is_dead_state(state):
-        if not state.player_pos:
+        if not state.goal_pos:
             return True  # No player found
 
-        y, x = state.player_pos
+        y, x = state.goal_pos
 
         # Directions to check
         for dy, dx in DIRECTION.values():
@@ -152,10 +171,7 @@ class GameState:
                 target = state.map_data[ny][nx]
 
                 # If there is at least one moveable cell, it's not dead
-                if target in (SYMBOLS["EMPTY"], SYMBOLS["FIRE"], SYMBOLS["WATER"]) \
-                   or target in SYMBOLS["BUNUS"] \
-                   or target == SYMBOLS["GOAL"] \
-                   or target == SYMBOLS["SINGLE_WALL"]:  # movable wall
+                if target in (SYMBOLS["EMPTY"], SYMBOLS["WATER"],SYMBOLS["BUNUS"],SYMBOLS["GOAL"],SYMBOLS["SINGLE_WALL"]):
                     return False
 
         # All neighboring cells are blocked/unmovable → dead state
@@ -172,6 +188,8 @@ class GameState:
         new.game_over = self.game_over
         return new
 
+
+    
     # ======================================================
     # PRINT MAP
     # ======================================================

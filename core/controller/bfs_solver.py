@@ -41,7 +41,7 @@ class BFSSolver:
         while queue:
             current_state, path = queue.popleft()   # FIFO dequeue
             self.visited_states += 1
-
+ 
             if current_state.is_goal:
                 self.execution_time = time.time() - start_time
                 return path
@@ -52,15 +52,16 @@ class BFSSolver:
             available_actions = self.actions.available_actions(current_state)
 
             for action in available_actions:
+
                 dy, dx = DIRECTION[action]
 
                 new_state = deepcopy(current_state)
-                result_handler = self.result_class()
-                new_state= result_handler.update_environment_and_player(new_state, (dy, dx))
+                new_state= self.result_class.update_environment_and_player(new_state, (dy, dx))
                 # self.display.update_display()
 
                
-
+                if GameState.is_dead_state(new_state):
+                    continue
                 status = GameState.is_goal_status(new_state)
 
                 if status:
@@ -83,19 +84,39 @@ class BFSSolver:
     # =====================================================
     # Run BFS and display solution
     # =====================================================
+
     def run(self):
         path = self.bfs()
+        result_class = self.result_class()
 
+
+        for action in path:
+            # Handle Pygame events to keep window responsive
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    return
+
+            dy, dx = DIRECTION[action]
+            result_class.update_environment_and_player(self.initial_state, (dy, dx))
+
+            self.display.update_display()  # redraw map
+            time.sleep(0.1)  # small delay to visualize the movement
+
+        # Keep the window open after finishing
         print("\n===== BFS STATS =====")
         print("Visited:", self.visited_states)
         print("Generated:", self.generated_states)
         print("Length:", len(path))
         print(f"Execution Time: {self.execution_time:.6f} seconds")
         print("=====================\n")
-
-        # Apply solution step by step
-        result_handler = self.result_class()
-        for action in path:
-            dy, dx = DIRECTION[action]
-            result_handler.update_environment_and_player(self.initial_state, (dy, dx))
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    running = False
+                    
             self.display.update_display()
+       

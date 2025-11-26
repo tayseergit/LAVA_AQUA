@@ -57,6 +57,10 @@ class Result:
             state.is_goal = False
             return
 
+        if (new_y, new_x) in state.bonus_positions:
+            state.bunus_count_player += 1
+            state.bonus_positions.remove((new_y, new_x))
+        
         # Restore previous player tile
         if state.map_data[y][x] == SYMBOLS["WATER_PLAYER"]:
             state.map_data[y][x] = SYMBOLS["WATER"]
@@ -68,9 +72,7 @@ class Result:
             state.map_data[y][x] = SYMBOLS["EMPTY"]
 
         # Bonus pickup
-        if target in SYMBOLS["BUNUS"]:
-            state.bunus_count_player += 1
-            target = SYMBOLS["EMPTY"]
+
 
         # Update new position
         state.map_data[new_y][new_x] = SYMBOLS["PLAYER"]
@@ -83,8 +85,8 @@ class Result:
     def update_environment(self, state):
         old_map = deepcopy(state.map_data)
 
-        new_map = self.fire_spread(old_map)
-        new_map = self.water_spread(new_map)
+        new_map = self.fire_spread(state,old_map)
+        new_map = self.water_spread(state,new_map)
         new_map = self.digit_decrease(new_map)
 
         state.map_data = new_map
@@ -93,7 +95,7 @@ class Result:
     # ======================================================
     # FIRE
     # ======================================================
-    def fire_spread(self, old_map):
+    def fire_spread(self, state,old_map):
         new_map = deepcopy(old_map)
         for y in range(len(old_map)):
             for x in range(len(old_map[y])):
@@ -106,15 +108,15 @@ class Result:
                                 new_map[ny][nx] = SYMBOLS["SIMI_WALL_FIRE"]
                             elif target not in (
                                 SYMBOLS["WALL"], SYMBOLS["FIRE"], SYMBOLS["SINGLE_WALL"],
-                                SYMBOLS["GOAL"], SYMBOLS["WATER"], SYMBOLS["SIMI_WALL_FIRE"],SYMBOLS["BUNUS"]
-                            ) and not target.isdigit():
+                                SYMBOLS["GOAL"], SYMBOLS["WATER"], SYMBOLS["SIMI_WALL_FIRE"]
+                            ) and not target.isdigit()  and (ny, nx)!= state.goal_pos:
                                 new_map[ny][nx] = SYMBOLS["FIRE"]
         return new_map
 
     # ======================================================
     # WATER
     # ======================================================
-    def water_spread(self, old_map):
+    def water_spread(self,state, old_map):
         new_map = deepcopy(old_map)
         for y in range(len(old_map)):
             for x in range(len(old_map[y])):
@@ -123,15 +125,17 @@ class Result:
                         ny, nx = y + dy, x + dx
                         if 0 <= ny < len(old_map) and 0 <= nx < len(old_map[0]):
                             target = old_map[ny][nx]
-                            if target in FIRE_SYMBOLS:
+
+                            if target in FIRE_SYMBOLS and (ny, nx) != state.goal_pos :
                                 new_map[ny][nx] = SYMBOLS["WALL"]
                             elif target == SYMBOLS["SIMI_WALL"]:
                                 new_map[ny][nx] = SYMBOLS["SIMI_WALL_WATER"]
                             elif target not in (
                                 SYMBOLS["WALL"], SYMBOLS["WATER"], SYMBOLS["SINGLE_WALL"],
-                                SYMBOLS["GOAL"], SYMBOLS["SIMI_WALL_WATER"],SYMBOLS["BUNUS"]
-                            ) and not target.isdigit():
+                                SYMBOLS["GOAL"], SYMBOLS["SIMI_WALL_WATER"]
+                            ) and not target.isdigit() and (ny, nx)!= state.goal_pos:
                                 new_map[ny][nx] = SYMBOLS["WATER"]
+        
         return new_map
 
     # ======================================================

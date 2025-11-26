@@ -45,9 +45,7 @@ class Actions:
         return actions
 
     def print_available_actions(self, state=None):
-        """
-        طباعة الأكشنات المتاحة لحالة معينة.
-        """
+ 
         actions = self.available_actions(state)
         print("\nAvailable actions for player (●):")
         if actions:
