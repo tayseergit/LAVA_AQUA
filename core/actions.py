@@ -3,16 +3,11 @@ from core.component.symbols import DIRECTION, SYMBOLS
 
 class Actions:
     def __init__(self, state=None):
-        """
-        يمكن تمرير حالة افتراضية عند إنشاء الكلاس.
-        """
+ 
         self.state = state
 
     def available_actions(self, state=None):
-        """
-        حساب جميع الأكشنات الممكنة لحالة معينة.
-        إذا لم يتم تمرير state، يستخدم self.state.
-        """
+     
         if state is None:
             state = self.state
 
@@ -28,17 +23,15 @@ class Actions:
             if 0 <= new_y < state.rows and 0 <= new_x < state.cols:
                 target = state.map_data[new_y][new_x]
 
-                # إذا كان الحائط القابل للدفع
                 if target == SYMBOLS["SINGLE_WALL"]:
                     wall_behind_y = new_y + dy
                     wall_behind_x = new_x + dx
                     if 0 <= wall_behind_y < state.rows and 0 <= wall_behind_x < state.cols:
                         behind_cell = state.map_data[wall_behind_y][wall_behind_x]
                         if behind_cell in (SYMBOLS["EMPTY"], SYMBOLS["FIRE"], SYMBOLS["WATER"],SYMBOLS["BUNUS"]):
-                            actions.append(action)  # يمكن دفع الحائط
-                    continue  # نتخطى باقي الشروط للحائط القابل للدفع
+                            actions.append(action)
+                    continue 
 
-                # الحركة العادية (فراغ، ماء، هدف، جائزة)
                 if target not in (SYMBOLS["WALL"], SYMBOLS["SIMI_WALL"]) and not target.isdigit():
                     actions.append(action)
 

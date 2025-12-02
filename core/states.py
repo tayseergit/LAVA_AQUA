@@ -1,35 +1,55 @@
-from copy import deepcopy
 from core.component.symbols import DIRECTION, SYMBOLS
+
+ 
+def copy_state(state):
+    new = state.__class__.__new__(state.__class__)
+    
+    new.map_data = [row[:] for row in state.map_data]
+
+    
+    new.player_pos = state.player_pos
+    new.goal_pos = state.goal_pos
+    new.bunus_count_player = state.bunus_count_player
+    new.bunus_count = state.bunus_count
+    new.rows = state.rows
+    new.cols = state.cols
+    new.is_goal = state.is_goal
+    new.game_over = state.game_over
+
+    new.bonus_positions = state.bonus_positions[:]
+
+    new.history = []
+
+    new.initial_map = state.initial_map
+    new.initial_player_pos = state.initial_player_pos
+
+    return new
 
 
 class GameState:
     def __init__(self, map_data):
-        self.map_data = deepcopy(map_data)
-        self.initial_map = deepcopy(map_data)
+
+        self.map_data = [row[:] for row in map_data]
+        self.initial_map = [row[:] for row in map_data]
+
         self.history = []
         self.bonus_positions = []
 
-        # Dimensions
         self.rows = len(self.map_data)
-        self.cols = len(self.map_data[0]) if self.rows > 0 else 0
+        self.cols = len(self.map_data[0])
 
-        # Player & Goal
         self.player_pos = self.find_symbol(SYMBOLS["PLAYER"])
-        self.initial_player_pos = deepcopy(self.player_pos)
-
+        self.initial_player_pos = self.player_pos
         self.goal_pos = self.find_symbol(SYMBOLS["GOAL"])
 
-        # Bonus counters
-        self.bunus_count = self.count_bonuses()
         self.bunus_count_player = 0
+        self.bunus_count = self.count_bonuses()
 
-        # Flags
         self.is_goal = False
         self.game_over = False
 
-    # ======================================================
-    # FIND SYMBOL
-    # ======================================================
+        self.search_trace = []
+ 
     def find_symbol(self, symbol):
         for y, row in enumerate(self.map_data):
             for x, cell in enumerate(row):
@@ -37,13 +57,11 @@ class GameState:
                     return (y, x)
         return None
 
-    # ======================================================
-    # COUNT BONUSES
-    # ======================================================
+ 
     def count_bonuses(self):
-        self.bonus_positions = []  # <-- store bonus coordinates
-
+        self.bonus_positions = []
         count = 0
+
         for y, row in enumerate(self.map_data):
             for x, cell in enumerate(row):
                 if cell in SYMBOLS["BUNUS"]:
@@ -51,149 +69,113 @@ class GameState:
                     self.bonus_positions.append((y, x))
 
         return count
-    # ======================================================
-    # PURE GOAL CHECK — BFS USES THIS
-    # ======================================================
+
+ 
     @staticmethod
     def is_goal_status(state):
-        # print(state.bunus_count_player)
-        # print(state.bunus_count)
         py, px = state.player_pos
         gy, gx = state.goal_pos
         tile = state.map_data[py][px]
- 
 
-        # print(state.bunus_count_player , state.bunus_count)
-        # Lose if step on fire
+         
         if (py, px) == (gy, gx) and state.bunus_count_player == state.bunus_count:
             state.is_goal = True
             state.game_over = False
             return True
-        elif tile in (SYMBOLS["FIRE"],SYMBOLS["WALL"]):
+
+         
+        if tile in (SYMBOLS["FIRE"], SYMBOLS["WALL"]):
             state.is_goal = False
             state.game_over = True
             return False
 
-        # Goal if reach goal & have all bonuses
-
-        # Normal
-        return None
-
-    # ======================================================
-    # INTERNAL UPDATE AFTER MOVE (not BFS)
-    # ======================================================
+        return None  
+ 
     def update_state(self, new_map):
-        # Save old state for undo
-        self.history.append((deepcopy(self.map_data), deepcopy(self.player_pos)))
 
-        self.map_data = deepcopy(new_map)
+
+        self.history.append((copy_state(self), self.player_pos))
+
+        self.map_data = [row[:] for row in new_map]
+
         self.rows = len(self.map_data)
         self.cols = len(self.map_data[0])
-         # write state on file
-        # with open(
-        #      "D:\مشاريع\LAVA_AQUA\data\states_log.txt" , "a", encoding="utf-8") as f:
-        #     for row in self.map_data:
-        #         f.write(str(row) + "\n")
-        #     f.write("\n\n\n")
 
+        status = GameState.is_goal_status(self)
 
-            
-        # Evaluate goal / lose states
-        goal_status = GameState.is_goal_status(self)
-        # print(goal_status)
-        if goal_status :
+        if status is True:
             self.is_goal = True
             self.game_over = True
-            print("You win! Player reached the goal.")
-        elif goal_status is False:
+            # print("You win!")
+        elif status is False:
             self.is_goal = False
             self.game_over = True
-            print("You lose! Player stepped on fire.")
+            # print("You lose!")
         else:
             self.is_goal = False
             self.game_over = False
 
-        self.print_map()
+        # self.print_map(self.map_data)
 
-    # ======================================================
-    # UNDO
-    # ======================================================
+ 
     def undo(self):
-        if len(self.history) <= 1:
-            print("No previous state to undo.")
+        if len(self.history) < 1:
+            print("No previous state.")
             return
 
-        last_map, last_player = self.history.pop()
+        old_state, old_player = self.history.pop()
 
-        self.map_data = deepcopy(last_map)
-        self.player_pos = deepcopy(last_player)
-        self.rows = len(self.map_data)
-        self.cols = len(self.map_data[0])
+        self.map_data = [row[:] for row in old_state.map_data]
+        self.player_pos = old_player
+        self.bunus_count_player = old_state.bunus_count_player
+        self.game_over = old_state.game_over
+        self.is_goal = old_state.is_goal
 
-        # Re-evaluate state after undo
-        status = GameState.is_goal_status(self)
-        self.is_goal = (status == "goal")
-        self.game_over = (status == "goal" or status == "lose")
-
-        print("Undo performed.")
-        self.print_map()
-
-    # ======================================================
-    # RESTART
-    # ======================================================
+        print("Undo done.")
+        # self.print_map()
+ 
     def restart(self):
-        self.map_data = deepcopy(self.initial_map)
-        self.player_pos = deepcopy(self.initial_player_pos)
+        self.map_data = [row[:] for row in self.initial_map]
+        self.player_pos = self.initial_player_pos
 
         self.history.clear()
+        self.bunus_count_player = 0
+        self.bunus_count = self.count_bonuses()
 
         self.is_goal = False
         self.game_over = False
 
-        self.bunus_count_player = 0
-        self.bunus_count = self.count_bonuses()
+        print("🔁 Restarted.")
+        # self.print_map()
 
-        print("🔁 Game restarted.")
-        self.print_map()
-
-
+ 
     def is_dead_state(state):
         if not state.goal_pos:
-            return True  # No player found
+            return True
 
         y, x = state.goal_pos
 
-        # Directions to check
         for dy, dx in DIRECTION.values():
             ny, nx = y + dy, x + dx
 
             if 0 <= ny < state.rows and 0 <= nx < state.cols:
                 target = state.map_data[ny][nx]
 
-                # If there is at least one moveable cell, it's not dead
-                if target in (SYMBOLS["EMPTY"], SYMBOLS["WATER"],SYMBOLS["BUNUS"],SYMBOLS["GOAL"],SYMBOLS["SINGLE_WALL"]):
+                if target in (
+                    SYMBOLS["EMPTY"],
+                    SYMBOLS["WATER"],
+                    SYMBOLS["BUNUS"],
+                    SYMBOLS["GOAL"],
+                    SYMBOLS["SINGLE_WALL"]
+                ):
                     return False
 
-        # All neighboring cells are blocked/unmovable → dead state
         return True
-    
+ 
     def copy(self):
-        new = GameState.__new__(GameState)
-        new.map_data = [row[:] for row in self.map_data]   # shallow clone of grid
-        new.player_pos = self.player_pos
-        new.bunus_count_player = self.bunus_count_player
-        new.rows = self.rows
-        new.cols = self.cols
-        new.is_goal = self.is_goal
-        new.game_over = self.game_over
-        return new
-
-
-    
-    # ======================================================
-    # PRINT MAP
-    # ======================================================
-    def print_map(self):
-        for row in self.map_data:
+        return copy_state(self)
+ 
+    def print_map(self,map_data):
+        for row in map_data:
             print("".join(row))
         print()

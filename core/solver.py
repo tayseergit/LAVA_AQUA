@@ -8,6 +8,8 @@ from core.states import GameState
 from core.controller.player_solver import *
 from presentation.display_map import GameDisplay
 from core.controller.bfs_solver import *
+from core.controller.a_star import *
+
 
 class Solver:
     def __init__(self, map_name):
@@ -18,24 +20,24 @@ class Solver:
         map_file = os.path.join(project_root, "data/maps_txt", map_name)
         print(os.path.abspath(map_file))
 
-        # Load map and initialize game objects
         self.map_data = load_map(map_file)
         self.state = GameState(self.map_data)
         self.actions = Actions(self.state)
-        self.result = Result()     # ✔️ must pass state
+        self.result = Result()     
         self.display = GameDisplay(self.state)
 
         self.player = HumanPlayer(self.state, self.actions, self.result, self.display)
 
         self.bfs = BFSSolver(self.state, self.actions, Result, self.display)
         self.dfs = DFSSolver(self.state, self.actions, Result, self.display)
+        self.astar = AStarSolver(self.state, self.actions, Result,self.display)
 
     def solve(self):
         print("Simulation started...")
-        self.state.print_map()
-
+ 
         # self.player.run()
+        # self.dfs.run()
         # self.bfs.run()
-        self.dfs.run()
+        self.astar.run()
 
 
