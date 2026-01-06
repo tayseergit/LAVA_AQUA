@@ -1,0 +1,4 @@
+data/states_log.txt
+*.log
+__pycache__/
+*.pyc
