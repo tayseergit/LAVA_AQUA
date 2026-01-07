@@ -3,6 +3,6 @@ def load_map(filename):
     with open(filename, "r", encoding="utf-8") as f:
         for line in f:
             # Split line by spaces to allow multi-character cells
-            row = [c for c in line.strip().split()]
+            row = [c for c in line.strip().split() if c]
             map_data.append(row)
     return map_data

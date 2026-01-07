@@ -4,6 +4,7 @@ import pygame
 import time
 from core.component.symbols import *
 from core.states import *
+from core.controller.solver_runner import visualize_solver_path
 
 class DFSSolver:
     def __init__(self, state, actions, result_class, display):
@@ -77,34 +78,15 @@ class DFSSolver:
 
     def run(self):
         path = self.dfs()
-        result_class = self.result_class()
-
-
-        for action in path:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    return
-
-            dy, dx = DIRECTION[action]
-            result_class.update_environment_and_player(self.initial_state, (dy, dx))
-
-            self.display.update_display()  
-            time.sleep(0.1)   
-
-        print("\n===== DFS STATS  =====")
-        print("Visited:", self.visited_states)
-        print("Generated:", self.generated_states)
-        print("Length:", len(path))
-        print(f"Execution Time: {self.execution_time:.6f} seconds")
-        print("=====================\n")
-        running = True
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    running = False
-                    
-            self.display.update_display()
+        visualize_solver_path(
+            path=path,
+            initial_state=self.initial_state,
+            result_class=self.result_class,
+            display=self.display,
+            solver_name="DFS",
+            visited_states=self.visited_states,
+            generated_states=self.generated_states,
+            execution_time=self.execution_time,
+            cost=0,
+        )
        

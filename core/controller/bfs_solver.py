@@ -4,6 +4,7 @@ import pygame
 import time
 from core.component.symbols import *
 from core.states import *
+from core.controller.solver_runner import visualize_solver_path
 
 class BFSSolver:
     def __init__(self, state, actions, result_class, display):
@@ -17,14 +18,7 @@ class BFSSolver:
         self.visited_states = 0
         self.generated_states = 0
         self.execution_time = 0
- 
- 
-    def make_key(self, state):
- 
-        map_tuple = tuple(tuple(row) for row in state.map_data)
-        
-        return (state.player_pos, state.bunus_count_player, map_tuple)
-
+  
  
     def bfs(self):
         start_time = time.time()
@@ -34,7 +28,7 @@ class BFSSolver:
 
  
         visited = set()
-        visited.add(self.make_key(start_state))
+        visited.add(make_key(start_state))
 
         # self.visited_states = 1
         self.generated_states = 1
@@ -64,7 +58,7 @@ class BFSSolver:
                 if  status is False :
                     continue
 
-                key = self.make_key(new_state)
+                key = make_key(new_state)
                 if key not in visited:
                     visited.add(key)
                     queue.append((new_state, path + [action]))
@@ -76,34 +70,15 @@ class BFSSolver:
  
     def run(self):
         path = self.bfs()
-        result_class = self.result_class()
-
-
-        for action in path:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    return
-
-            dy, dx = DIRECTION[action]
-            result_class.update_environment_and_player(self.initial_state, (dy, dx))
-
-            self.display.update_display()  # redraw map
-            time.sleep(0.1)   
- 
-        print("\n===== BFS STATS  =====")
-        print("Visited:", self.visited_states)
-        print("Generated:", self.generated_states)
-        print("Length:", len(path))
-        print(f"Execution Time: {self.execution_time:.6f} seconds")
-        print("=====================\n")
-        running = True
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    running = False
-                    
-            self.display.update_display()
+        visualize_solver_path(
+            path=path,
+            initial_state=self.initial_state,
+            result_class=self.result_class,
+            display=self.display,
+            solver_name="BFS",
+            visited_states=self.visited_states,
+            generated_states=self.generated_states,
+            execution_time=self.execution_time,
+            
+        )
        

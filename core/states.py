@@ -25,7 +25,22 @@ def copy_state(state):
 
     return new
 
+def count_fire(state):
+    count=0
+    for  row in state.map_data:
+            for  cell in row:
+                if cell == SYMBOLS['FIRE']:
+                    count+=1
+    return count
 
+
+def make_key(state):
+    return (
+        state.player_pos,
+        state.bunus_count_player,
+        tuple(tuple(r) for r in state.map_data)
+    )
+  
 class GameState:
     def __init__(self, map_data):
 
@@ -149,7 +164,7 @@ class GameState:
         # self.print_map()
 
  
-    def is_dead_state(state):
+    def is_dead_state(self,state):
         if not state.goal_pos:
             return True
 

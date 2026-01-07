@@ -7,7 +7,7 @@ from core.component.symbols import *
 from core.states import *
 from core.controller.solver_runner import visualize_solver_path
 
-class AStar:
+class hillcliming:
     def __init__(self, state, actions, result_class, display):
         self.initial_state = state
         self.actions = actions
@@ -17,47 +17,35 @@ class AStar:
         self.visited_states = 0
         self.generated_states = 0
         self.timeAlog = 0
+        
+    def h(self,state):
+        gy ,gx =  state.goal_pos
+        py ,px =  state.player_pos
 
-    def h(self, state):
-        gy, gx = state.goal_pos
-        py, px = state.player_pos   
-        h_cost = abs(gy - py) + abs(gx - px)    
-        if state.is_dead_state(state):
-            h_cost += 1 
-        h_cost += state.bunus_count - state.bunus_count_player
-        return h_cost
+        return abs (gy-py) + abs(gx-px)
 
-
-    def a_star(self):
+    def hill(self):
         pq = []
-
-        visited = set()
-        visited.add(make_key(self.initial_state))
-
-        cost =0 + self.h(self.initial_state)
-        heappush(pq, (cost, [], self.initial_state))
+        best_cost = self.h(self.initial_state)
+        heappush(pq, (best_cost, [], self.initial_state))
         while pq:
-            cost, path, state = heappop(pq)
-            visited.add(make_key(state))
-
+            _ , path, state = heappop(pq)
             if GameState.is_goal_status(state):
-                return path, cost
+                return path
             for action in self.actions.available_actions(state):
                 dy, dx = DIRECTION[action]
                 ns = copy_state(state)
                 ns = self.result_class().update_environment_and_player(ns, (dy, dx))
                 if ns is None:
                     continue
-                newCost = len(path) + self.h(ns)
-                if make_key(ns) not in visited:
-                    heappush(pq, (newCost, path + [action], ns))
+                newCost =  self.h(ns)
+                
+                heappush(pq, (newCost, path + [action], ns))
         return [], 0
 
 
     def run(self):
-        timee =time.time()
-        path, cost = self.a_star()
-        self.timeAlog =time.time()-timee
+        path = self.hill()
         visualize_solver_path(
             path=path,
             initial_state=self.initial_state,
@@ -67,5 +55,4 @@ class AStar:
             visited_states=self.visited_states,
             generated_states=self.generated_states,
             execution_time=self.timeAlog,
-            cost=cost,
         )

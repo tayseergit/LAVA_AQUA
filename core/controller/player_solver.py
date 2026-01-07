@@ -10,7 +10,6 @@ class HumanPlayer:
         self.result = result
 
     def handle_events(self):
-        """Process keyboard events to move player."""
         keys = pygame.key.get_pressed()
         available = self.actions.available_actions(self.state)
 
@@ -24,7 +23,6 @@ class HumanPlayer:
             self.result.update_environment_and_player(self.state,DIRECTION["RIGHT"])
 
     def run(self):
-        """Main loop using Pygame to move player and render GUI."""
         running = True
         while running and not self.state.game_over:
             for event in pygame.event.get():
